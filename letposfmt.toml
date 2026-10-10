@@ -1,0 +1,4 @@
+tab_spaces = 2
+indentation_style = "Spaces"
+newline_style = "Unix"
+closing_tag_style = "SelfClosing"
