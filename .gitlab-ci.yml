@@ -7,7 +7,7 @@ variables:
   CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
 
 default:
-  image: rustlang/rust:stable
+  image: rust:stable
   cache:
     key: "$CI_COMMIT_REF_SLUG"
     paths:
