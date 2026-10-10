@@ -1,0 +1,46 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  TRUNK_VERSION: "v0.18.4"
+  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
+
+default:
+  image: rustlang/rust:stable
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .cargo/
+      - target/
+  interruptible: false
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+build:
+  stage: build
+  timeout: 5 minutes
+  script:
+    - rustup target add wasm32-unknown-unknown
+    - wget -qO- "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" | tar -xzf-
+    - ./trunk build --release --public-url "${CI_PROJECT_NAME}"
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+
+pages:
+  stage: deploy
+  timeout: 5 minutes
+  needs: ["build"]
+  resource_group: pages
+  script:
+    - mv dist public
+  artifacts:
+    paths:
+      - public
+  environment:
+    name: production
+    url: "$CI_PAGES_URL"
