@@ -25,7 +25,7 @@ build:
   script:
     - rustup target add wasm32-unknown-unknown
     - wget -qO- "https://github.com/trunk-rs/trunk/releases/download/${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" | tar -xzf-
-    - ./trunk build --release --public-url "${CI_PROJECT_NAME}"
+    - ./trunk build --release --public-url "https://rrx.theokrueger.dev"
   artifacts:
     paths:
       - dist/
@@ -37,7 +37,7 @@ pages:
   needs: ["build"]
   resource_group: pages
   script:
-    - mv dist public
+    - mv dist/* public
   artifacts:
     paths:
       - public
