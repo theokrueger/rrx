@@ -1,0 +1,5 @@
+* rrx
+a webui for testing Rust regex matching.
+select from various versions of the regex crate and view a live preview of matches.
+
+[[https://rrx.theokrueger.dev/]]

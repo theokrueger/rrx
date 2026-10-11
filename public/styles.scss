@@ -1,7 +1,5 @@
 * {
   box-sizing: border-box;
-}
-body {
   font-family: mono;
 }
 header > h1 {
@@ -19,7 +17,21 @@ label {
 }
 #regex_out {
   width: 100%;
-  min-height: 10em;
+  min-height: 1em;
+  max-height: 30em;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.cyan {
+  color: #00aaaa;
+}
+.dim {
+  color: #888888;
+}
+.red {
+  color: #aa0000;
 }
 #regex_pat {
   width: 100%;
