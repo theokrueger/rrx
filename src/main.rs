@@ -6,6 +6,7 @@ struct Hit {
     text: String,
     start: usize,
     end: usize,
+    groups: Vec<Option<(usize, usize)>>,
 }
 
 #[derive(Clone)]
@@ -16,17 +17,29 @@ enum Out {
     Hits(Vec<Hit>),
 }
 
+const COLORS: usize = 6;
+
 macro_rules! find_all {
     ($re:ident, $pat:expr, $txt:expr) => {
         match $re::Regex::new($pat) {
             Ok(p) => {
                 let hits: Vec<Hit> = p
-                    .find_iter($txt)
-                    .filter(|m| !m.as_str().is_empty())
-                    .map(|m| Hit {
-                        text: m.as_str().to_string(),
-                        start: m.start(),
-                        end: m.end(),
+                    .captures_iter($txt)
+                    .filter(|c| c.get(0).is_some_and(|m| !m.as_str().is_empty()))
+                    .map(|c| {
+                        let m = c.get(0).expect("group 0 always present");
+                        let groups = (1..c.len())
+                            .map(|i| {
+                                c.get(i)
+                                    .map(|g| (g.start() - m.start(), g.end() - m.start()))
+                            })
+                            .collect();
+                        Hit {
+                            text: m.as_str().to_string(),
+                            start: m.start(),
+                            end: m.end(),
+                            groups,
+                        }
                     })
                     .collect();
                 if hits.is_empty() {
@@ -40,6 +53,95 @@ macro_rules! find_all {
     };
 }
 
+struct GroupNode {
+    group: usize,
+    start: usize,
+    end: usize,
+    children: Vec<usize>,
+}
+
+fn group_forest(h: &Hit) -> (Vec<GroupNode>, Vec<usize>) {
+    let mut sorted: Vec<(usize, usize, usize)> = h
+        .groups
+        .iter()
+        .enumerate()
+        .filter_map(|(gi, g)| g.map(|(s, e)| (gi + 1, s, e)))
+        .collect();
+
+    sorted.sort_by(|a, b| a.1.cmp(&b.1).then(b.2.cmp(&a.2)).then(a.0.cmp(&b.0)));
+
+    let mut arena: Vec<GroupNode> = Vec::new();
+    let mut roots: Vec<usize> = Vec::new();
+    let mut stack: Vec<usize> = Vec::new();
+    for (group, start, end) in sorted {
+        while let Some(&top) = stack.last() {
+            let t = &arena[top];
+            if t.start <= start && end <= t.end {
+                break;
+            }
+            stack.pop();
+        }
+        let idx = arena.len();
+        arena.push(GroupNode {
+            group,
+            start,
+            end,
+            children: Vec::new(),
+        });
+        match stack.last() {
+            Some(&parent) => arena[parent].children.push(idx),
+            None => roots.push(idx),
+        }
+        stack.push(idx);
+    }
+    (arena, roots)
+}
+
+fn render_group(arena: &[GroupNode], idx: usize, text: &str, depth: usize) -> AnyView {
+    let node = &arena[idx];
+    let mut parts: Vec<AnyView> = Vec::new();
+    let mut pos = node.start;
+    for &child in &node.children {
+        let c = &arena[child];
+        if c.start > pos {
+            parts.push(text[pos..c.start].to_string().into_any());
+        }
+        parts.push(render_group(arena, child, text, depth + 1));
+        pos = c.end;
+    }
+    if pos < node.end {
+        parts.push(text[pos..node.end].to_string().into_any());
+    }
+
+    let text_cls = format!("cg{}", (node.group - 1) % COLORS + 1);
+
+    let class = if depth > 0 || !node.children.is_empty() {
+        format!("{text_cls} u{}", depth % COLORS + 1)
+    } else {
+        text_cls
+    };
+    view! { <span class=class>{parts}</span> }.into_any()
+}
+
+fn hit_text_view(h: &Hit) -> AnyView {
+    let (arena, roots) = group_forest(h);
+    let text = h.text.as_str();
+    let mut parts: Vec<AnyView> = Vec::new();
+    let mut pos = 0;
+    for &root in &roots {
+        let r = &arena[root];
+        if r.start > pos {
+            parts.push(text[pos..r.start].to_string().into_any());
+        }
+        parts.push(render_group(&arena, root, text, 0));
+        pos = r.end;
+    }
+    if pos < text.len() {
+        parts.push(text[pos..].to_string().into_any());
+    }
+    view! { {parts} }.into_any()
+}
+
 fn out_view(out: Out) -> AnyView {
     match out {
         Out::Idle => view! { <span class="dim">"no pattern/text"</span> }.into_any(),
@@ -48,7 +150,6 @@ fn out_view(out: Out) -> AnyView {
         Out::Hits(hits) => {
             let total = hits.len();
             let iw = total.to_string().len();
-            // ranges are padded so the match column lines up
             let ranges: Vec<String> = hits
                 .iter()
                 .map(|h| format!("[{}..{}]", h.start, h.end))
@@ -66,7 +167,7 @@ fn out_view(out: Out) -> AnyView {
                         "  "
                         <span class="cyan">{range}</span>
                         "  "
-                        <span>{h.text.clone()}</span>
+                        {hit_text_view(h)}
                         "\n"
                     }
                     .into_any()
@@ -118,25 +219,29 @@ fn main() {
         view! {
             <header>
                 <h1>Interactive Rust Regex Tester</h1>
-            <div>"by "<a href="https://theokrueger.dev">theokrueger</a></div>
+                <div>"by "<a href="https://theokrueger.dev">theokrueger</a></div>
             </header>
             <hr />
 
-             <label for="regex_ver">Regex</label>
+            <label for="regex_ver">Regex</label>
             <select
-            name="regex_ver"
-            id="regex_ver"
-            on:input:target=move |ev| {
+                name="regex_ver"
+                id="regex_ver"
+                on:input:target=move |ev| {
                     set_regex_ver.set(ev.target().value());
                     upd_regex3();
                 }
-            prop:value=regex_ver
+                prop:value=regex_ver
             >
-            <option value="1.13">1.13</option>
-            <option value="1.11">1.11</option>
-            <option value="1.9">1.9</option>
-            <option value="1.5">1.5</option>
-            </select>" - "<a href=move || format!("https://docs.rs/regex/{}/regex#syntax", regex_ver.get())>syntax reference</a>
+                <option value="1.13">1.13</option>
+                <option value="1.11">1.11</option>
+                <option value="1.9">1.9</option>
+                <option value="1.5">1.5</option>
+            </select>
+            " - "
+            <a href=move || {
+                format!("https://docs.rs/regex/{}/regex#syntax", regex_ver.get())
+            }>syntax reference</a>
             <br />
 
             <label for="regex_pat">Pattern</label>
@@ -157,7 +262,7 @@ fn main() {
             <textarea
                 autofocus
                 placeholder="Your data"
-                 required
+                required
                 id="regex_text"
                 on:input:target=move |ev| {
                     set_regex_text.set(ev.target().value());
@@ -174,12 +279,15 @@ fn main() {
             <hr />
 
             <p>
-            <a href="https://gitlab.com/theokrueger/rrx">source</a>,
-            " made with "
-            <a href="https://www.leptos.dev/">Leptos</a>
-            " " and " "
-            <a href="https://crates.io/crates/regex">regex</a>
-            ". clientsided, no tracking."
+                <a href="https://gitlab.com/theokrueger/rrx">source</a>
+                ,
+                " made with "
+                <a href="https://www.leptos.dev/">Leptos</a>
+                " "
+                and
+                " "
+                <a href="https://crates.io/crates/regex">regex</a>
+                ". clientsided, no tracking."
             </p>
         }
     })

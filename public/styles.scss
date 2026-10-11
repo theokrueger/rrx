@@ -23,16 +23,35 @@ label {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   margin: 0;
+  padding-bottom: 1em;
 }
 .cyan {
-  color: #00aaaa;
+  color: #008080;
 }
 .dim {
-  color: #888888;
+  color: #808080;
 }
 .red {
   color: #aa0000;
 }
+$ucolors: #800000, #008000, #808000, #000080, #800080, #008080;
+@for $i from 1 through length($ucolors) {
+  .u#{$i} {
+    text-decoration: underline;
+    text-decoration-color: nth($ucolors, $i);
+    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: none;
+    text-underline-offset: #{$i * 2}px;
+  }
+}
+$ccolors: #a00000, #00a000, #a0a000, #0000a0, #a000a0, #00a0a0;
+@for $i from 1 through length($ccolors) {
+  .cg#{length($ccolors) - $i + 1} {
+    color: nth($ccolors, $i);
+    font-weight: 600;
+  }
+}
+
 #regex_pat {
   width: 100%;
 }
