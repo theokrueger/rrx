@@ -6,4 +6,11 @@ edition = "2024"
 [dependencies]
 console_error_panic_hook = "0.1.7"
 leptos = { version = "0.8.22", features = ["csr"] }
+
+# Cargo refuses to unify two semver-compatible 1.x versions from the registry,
+# so the older 1.x milestones are pinned to distinct git tags (distinct source
+# ids let them coexist) and 1.13 stays on the registry like the rest.
+regex_1_5 = { package = "regex", git = "https://github.com/rust-lang/regex", tag = "1.5.6" }
+regex_1_9 = { package = "regex", git = "https://github.com/rust-lang/regex", tag = "1.9.6" }
+regex_1_11 = { package = "regex", git = "https://github.com/rust-lang/regex", tag = "1.11.1" }
 regex_1_13 = { package = "regex", version = "1.13.1" }

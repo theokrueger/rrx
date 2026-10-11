@@ -4,6 +4,15 @@ version = 4
 
 [[package]]
 name = "aho-corasick"
+version = "0.7.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc936419f96fa211c1b9166887b38e5e40b19958e5b895be7c1f93adec7071ac"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
+name = "aho-corasick"
 version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
@@ -738,7 +747,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c06f751315bccc0d193fab302ac01d25bcfcd97474d4676440e7e3250dc3fc3"
 dependencies = [
  "config",
- "regex",
+ "regex 1.13.1",
  "serde",
  "thiserror 2.0.21",
  "typed-builder",
@@ -1082,14 +1091,66 @@ dependencies = [
 
 [[package]]
 name = "regex"
+version = "1.5.6"
+source = "git+https://github.com/rust-lang/regex?tag=1.5.6#9aef5b1edc2a436244b936db53a03ed6d720e87e"
+dependencies = [
+ "aho-corasick 0.7.20",
+ "memchr",
+ "regex-syntax 0.6.26",
+]
+
+[[package]]
+name = "regex"
+version = "1.9.6"
+source = "git+https://github.com/rust-lang/regex?tag=1.9.6#11b44439786499014f61afe6e294650fb01550be"
+dependencies = [
+ "aho-corasick 1.1.5",
+ "memchr",
+ "regex-automata 0.3.9",
+ "regex-syntax 0.7.5",
+]
+
+[[package]]
+name = "regex"
+version = "1.11.1"
+source = "git+https://github.com/rust-lang/regex?tag=1.11.1#9870c06e6c772daaad7ab612faab29130753e41c"
+dependencies = [
+ "aho-corasick 1.1.5",
+ "memchr",
+ "regex-automata 0.4.8",
+ "regex-syntax 0.8.5",
+]
+
+[[package]]
+name = "regex"
 version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
 dependencies = [
- "aho-corasick",
+ "aho-corasick 1.1.5",
  "memchr",
- "regex-automata",
- "regex-syntax",
+ "regex-automata 0.4.18",
+ "regex-syntax 0.8.11",
+]
+
+[[package]]
+name = "regex-automata"
+version = "0.3.9"
+source = "git+https://github.com/rust-lang/regex?tag=1.9.6#11b44439786499014f61afe6e294650fb01550be"
+dependencies = [
+ "aho-corasick 1.1.5",
+ "memchr",
+ "regex-syntax 0.7.5",
+]
+
+[[package]]
+name = "regex-automata"
+version = "0.4.8"
+source = "git+https://github.com/rust-lang/regex?tag=1.11.1#9870c06e6c772daaad7ab612faab29130753e41c"
+dependencies = [
+ "aho-corasick 1.1.5",
+ "memchr",
+ "regex-syntax 0.8.5",
 ]
 
 [[package]]
@@ -1098,10 +1159,25 @@ version = "0.4.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2"
 dependencies = [
- "aho-corasick",
+ "aho-corasick 1.1.5",
  "memchr",
- "regex-syntax",
+ "regex-syntax 0.8.11",
 ]
+
+[[package]]
+name = "regex-syntax"
+version = "0.6.26"
+source = "git+https://github.com/rust-lang/regex?tag=1.5.6#9aef5b1edc2a436244b936db53a03ed6d720e87e"
+
+[[package]]
+name = "regex-syntax"
+version = "0.7.5"
+source = "git+https://github.com/rust-lang/regex?tag=1.9.6#11b44439786499014f61afe6e294650fb01550be"
+
+[[package]]
+name = "regex-syntax"
+version = "0.8.5"
+source = "git+https://github.com/rust-lang/regex?tag=1.11.1#9870c06e6c772daaad7ab612faab29130753e41c"
 
 [[package]]
 name = "regex-syntax"
@@ -1115,7 +1191,10 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "leptos",
- "regex",
+ "regex 1.11.1",
+ "regex 1.13.1",
+ "regex 1.5.6",
+ "regex 1.9.6",
 ]
 
 [[package]]
